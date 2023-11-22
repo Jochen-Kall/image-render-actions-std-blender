@@ -106,6 +106,41 @@ def Enable(_objX, _dicMod, **kwargs):
 
 
 ############################################################################################
+@paramclass
+class CEnableIfBoundBoxParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/enable-if/bound-box:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    xValue:bool = (CParamFields.REQUIRED(), 
+                   CParamFields.HINT(sHint="Enable/Disable Object in all renders"))
+    sTarget:str = (
+        CParamFields.REQUIRED(),
+        CParamFields.HINT(sHint="The name of the target object, whose bounding box will be used.")
+    )
+    bCompoundTarget:bool = (
+        CParamFields.HINT(sHint="""If set to true, the bounding box is evaluated for the object sTarget and all its' children.
+                If set to false, only the mesh of sTarget itself without children is used."""),
+        CParamFields.DEFAULT(False)
+    )
+    fBorder:bool = (
+        CParamFields.HINT(sHint="""Size of border around target object's bounding box."""),
+        CParamFields.DEFAULT(0.0)
+    )
+    sRelation:str = (
+        CParamFields.HINT(sHint="""The relation to test."""),
+        CParamFields.OPTIONS(["INSIDE", "OUTSIDE", "INTERSECT"], xDefault="INSIDE")
+    )
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CEnableIfBoundBoxParams,
+)
 def EnableIfBoundBox(_objX, _dicMod, **kwargs):
     """Enable/disable object depending on its' relation to a target object's bounding box.
 
@@ -116,7 +151,7 @@ def EnableIfBoundBox(_objX, _dicMod, **kwargs):
     _dicMod : dict
         Arguments
 
-    Configuration Paramters
+    Configuration Parameters
     -----------------------
     sTarget: string
         The name of the target object, whose bounding box will be used.
@@ -131,33 +166,34 @@ def EnableIfBoundBox(_objX, _dicMod, **kwargs):
     assertion.IsTrue(g_bInBlenderContext)
     config.AssertConfigType(_dicMod, "/catharsys/blender/modify/object/enable-if/bound-box:1.0")
 
-    fBorder = convert.DictElementToFloat(_dicMod, "fBorder", fDefault=0.0)
-    sRelation = convert.DictElementToString(_dicMod, "sRelation", sDefault="INSIDE").upper()
-    sTarget = convert.DictElementToString(_dicMod, "sTarget")
-    bCompoundTarget = convert.DictElementToBool(_dicMod, "bCompoundTarget", bDefault=False)
+    mp = CEnableIfBoundBoxParams
+    # fBorder = convert.DictElementToFloat(_dicMod, "fBorder", fDefault=0.0)
+    # sRelation = convert.DictElementToString(_dicMod, "sRelation", sDefault="INSIDE").upper()
+    # sTarget = convert.DictElementToString(_dicMod, "sTarget")
+    # bCompoundTarget = convert.DictElementToBool(_dicMod, "bCompoundTarget", bDefault=False)
 
-    objTarget = bpy.data.objects.get(sTarget)
+    objTarget = bpy.data.objects.get(mp.sTarget)
     if objTarget is None:
-        raise RuntimeError(f"Target object '{sTarget}' not found")
+        raise RuntimeError(f"Target object '{mp.sTarget}' not found")
     # endif
 
-    boxTarget = CBoundingBox(_objX=objTarget, _bCompoundObject=bCompoundTarget, _bUseMesh=True)
+    boxTarget = CBoundingBox(_objX=objTarget, _bCompoundObject=mp.bCompoundTarget, _bUseMesh=True)
 
     bEnable = None
-    match sRelation:
+    match mp.sRelation:
         case "INSIDE":
-            bEnable = boxTarget.IsObjectInside(_objX, _fBorder=fBorder)
+            bEnable = boxTarget.IsObjectInside(_objX, _fBorder=mp.fBorder)
 
         case "OUTSIDE":
-            bEnable = boxTarget.IsObjectOutside(_objX, _fBorder=fBorder)
+            bEnable = boxTarget.IsObjectOutside(_objX, _fBorder=mp.fBorder)
 
         case "INTERSECT":
-            bEnable = boxTarget.IsObjectIntersect(_objX, _fBorder=fBorder)
+            bEnable = boxTarget.IsObjectIntersect(_objX, _fBorder=mp.fBorder)
 
     # endmatch
 
     if bEnable is None:
-        raise RuntimeError(f"Unsupported relation '{sRelation}'. Expect one of ['INSIDE', 'OUTSIDE', 'INTERSECT']")
+        raise RuntimeError(f"Unsupported relation '{mp.sRelation}'. Expect one of ['INSIDE', 'OUTSIDE', 'INTERSECT']")
     # endif
 
     anyobj.Hide(_objX, bHide=not bEnable, bHideRender=not bEnable, bRecursive=True)
