@@ -97,7 +97,7 @@ def Enable(_objX, _dicMod, **kwargs):
     #     sDefault=convert.DictElementToString(_dicMod, "sDTI", bDoRaise=False),
     # )
 
-    bEnable = convert.DictElementToBool(_dicMod, "xValue")
+    # bEnable = convert.DictElementToBool(_dicMod, "xValue")
     bEnable = mp.xValue
     _EnableRender(_objX, bEnable, bRecursive=True)
 
