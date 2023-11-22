@@ -482,6 +482,31 @@ def RenameObject(_objX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CLogObjectParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/log:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    lAttributes: list = (
+        CParamFields.REQUIRED(list[str]), 
+        CParamFields.HINT(sHint="List of names of attributes that shall be logged")
+        )
+    sLogFile: str = (
+        CParamFields.REQUIRED(),
+        CParamFields.HINT(sHint = """The filename of the json file to be written. If not given
+            or None, the attributes will be logged to the console.""")
+    )
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CLogObjectParams,
+)
+
 def LogObject(_objX, _dicMod, **kwargs):
     """Log object attributes to json file
 
@@ -497,17 +522,18 @@ def LogObject(_objX, _dicMod, **kwargs):
             The filename of the json file to be written. If not given
             or None, the attributes will be logged to the console.
     """
-    lAttributes = _dicMod.get("lAttributes")
+    mp = CLogObjectParams
+    # lAttributes = _dicMod.get("lAttributes")
 
-    if lAttributes is None:
+    if mp.lAttributes is None:
         raise RuntimeError("List of object attribute names not given")
     # endif
 
-    sLogFile = _dicMod.get("sLogFile")
+    # sLogFile = _dicMod.get("sLogFile")
 
     dicJson = {}
 
-    for sAttr in lAttributes:
+    for sAttr in mp.lAttributes:
         # some objects do not support setting an attribute via setattr
         # but by []
         # this is handled here
@@ -530,13 +556,13 @@ def LogObject(_objX, _dicMod, **kwargs):
         # end try
     # endfor
 
-    if sLogFile is not None:
-        print("=== Logging", _objX.name, " to file", sLogFile, "===")
+    if mp.sLogFile is not None:
+        print("=== Logging", _objX.name, " to file", mp.sLogFile, "===")
 
         def default_serializer(_obj):
             return str(_obj)
 
-        with open(sLogFile, "w") as file:
+        with open(mp.sLogFile, "w") as file:
             json.dump(dicJson, file, indent=4, default=default_serializer)
         # endwith
     else:
