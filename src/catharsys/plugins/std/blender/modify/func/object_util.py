@@ -42,6 +42,11 @@ try:
     from anycam import ops as camops
     from anybase import config, convert, path
 
+    # Modifier decorator stuff
+    from anybase.dec.cls_paramclass import paramclass, CParamFields
+    from catharsys.decs.decorator_ep import EntryPoint
+    from catharsys.util.cls_entrypoint_information import CEntrypointInformation
+
     g_bInBlenderContext = True
 except Exception:
     g_bInBlenderContext = False  # don't worry, but don't call anything from here
@@ -269,6 +274,29 @@ def ModifyAttributes(_objX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CParentToObjectParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/parent:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    sParentObject:str = (CParamFields.REQUIRED(), 
+                         CParamFields.HINT(sHint="The name of the object to parent objX to."))
+    bKeepTransform: bool =(CParamFields.DEFAULT(False),
+                           CParamFields.HINT(sHint="Whether to keep the current absolute position of an object after parenting, or not."))
+    bSkipNonexistingParent: bool = (CParamFields.DEFAULT(False),
+                                    CParamFields.HINT(sHint="""Control how non existing parent target is handled. 
+                                        If set to true, modifier skips,
+                                        if set to false an error is thrown. Default behavior is throwing an error"""))
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CParentToObjectParams,
+)
 def ParentToObject(_objX, _dicMod, **kwargs):
     """Parent object to another
 
@@ -282,29 +310,20 @@ def ParentToObject(_objX, _dicMod, **kwargs):
         bSkipNonexistingParent (bool, optional) : Control how non existing parent target is handled. If set to true, modifier skips,
                         if set to false an error is thrown. Default behavior is throwing an error.
     """
-
-    # Get required elements
-    sParentObject = convert.DictElementToString(_dicMod, "sParentObject")
-    bKeepTransform = convert.DictElementToBool(_dicMod, "bKeepTransform", bDefault=False)
-
-    # Get optional elements
-    bSkipNonexistingParent = convert.DictElementToBool(
-        _dicMod,
-        "bSkipNonexistingParent",
-        bDefault=False,
-    )
+    # instantiate modifier parameter class
+    mp = CParentToObjectParams(_dicMod)
 
     if _objX.type == "CAMERA":
-        camops.ParentAnyCam(sCamId=_objX.name, sParentId=sParentObject)
+        camops.ParentAnyCam(sCamId=_objX.name, sParentId=mp.sParentObject)
 
     else:
-        objParent = bpy.data.objects.get(sParentObject)
+        objParent = bpy.data.objects.get(mp.sParentObject)
         if objParent is None:
-            if not bSkipNonexistingParent:
-                raise RuntimeError(f"Object '{sParentObject}' not found for parenting")
+            if not mp.bSkipNonexistingParent:
+                raise RuntimeError(f"Object '{mp.sParentObject}' not found for parenting")
             # endif
         else:
-            anyobj.ParentObject(objParent, _objX, bKeepTransform=bKeepTransform)
+            anyobj.ParentObject(objParent, _objX, bKeepTransform=mp.bKeepTransform)
         # endif
     # endif
 
