@@ -68,10 +68,29 @@ def _EnableRender(_objX, _bEnable, bRecursive=True):
 
 
 ############################################################################################
+@paramclass
+class CEnableParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/enable:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    xValue:bool = (CParamFields.REQUIRED(), 
+                   CParamFields.HINT(sHint="Enable/Disable Object in all renders"))
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CEnableParams,
+)
+
 def Enable(_objX, _dicMod, **kwargs):
     assertion.IsTrue(g_bInBlenderContext)
     config.AssertConfigType(_dicMod, "/catharsys/blender/modify/object/enable:1.0")
 
+    mp = CEnableParams(_dicMod)
     # sModType = convert.DictElementToString(
     #     _dicMod,
     #     "sType",
@@ -79,6 +98,7 @@ def Enable(_objX, _dicMod, **kwargs):
     # )
 
     bEnable = convert.DictElementToBool(_dicMod, "xValue")
+    bEnable = mp.xValue
     _EnableRender(_objX, bEnable, bRecursive=True)
 
 
