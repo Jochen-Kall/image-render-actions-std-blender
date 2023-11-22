@@ -390,6 +390,41 @@ def ParentToObject(_objX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CRenameObjectParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/rename:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )
+    sReplace: str = (
+        CParamFields.REQUIRED(),
+        CParamFields.HINT(sHint=""" The new object name. If bUseRegEx == true, this is expected to be a
+            regular expression, that can use the capture groups of the search term
+            to create the new name.""")
+    )
+    bUseRegEx:bool = (
+        CParamFields.DEFAULT(False),
+        CParamFields.HINT(sHint="""Determines whether a regular expression is used for renaming or not.
+            The argument 'sSearch' is only used, if this argument is true.
+            This modifier uses the python function 're.sub()'. See its' documentation
+            for more information on how to use capture groups:
+                https://docs.python.org/3/library/re.html"""),
+        CParamFields.DEPRECATED("sUseRegEx")
+    )
+    sSearch: str = (
+        CParamFields.DEFAULT(""),
+        CParamFields.HINT(sHint="""The regular expression search string used for regular expression replacement.
+            Should define capture groups for replacement.""")
+    )
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CRenameObjectParams,
+)
 def RenameObject(_objX, _dicMod, **kwargs):
     """Rename object with regular expression
 
@@ -415,18 +450,22 @@ def RenameObject(_objX, _dicMod, **kwargs):
             Should define capture groups for replacement.
     """
 
+    mp=CRenameObjectParams(_dicMod)
     sName = _objX.name
 
-    sReplace = convert.DictElementToString(_dicMod, "sReplace")
+    sReplace = mp.sReplace
+    # sReplace = convert.DictElementToString(_dicMod, "sReplace")
     if sReplace is None:
         raise RuntimeError("Element 'sReplace' not given in object rename modifier")
     # endif
 
-    bUseRegEx = convert.DictElementToBool(_dicMod, "sUseRegEx", bDefault=False)
+    bUseRegEx = mp.bUseRegEx
+    # bUseRegEx = convert.DictElementToBool(_dicMod, "sUseRegEx", bDefault=False)
 
     sNewName = None
     if bUseRegEx:
-        sSearch = convert.DictElementToString(_dicMod, "sSearch")
+        sSearch = mp.sSearch
+        # sSearch = convert.DictElementToString(_dicMod, "sSearch")
         if sSearch is None:
             raise RuntimeError("Element 'sSearch' not given in object rename modifier")
         # endif
