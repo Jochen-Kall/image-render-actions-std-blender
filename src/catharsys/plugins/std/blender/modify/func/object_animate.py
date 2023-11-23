@@ -32,6 +32,11 @@ import mathutils
 from anybase import convert
 from anyblend import viewlayer as anyvl
 
+# Modifier decorator stuff
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
+
 
 ############################################################################################
 def SelectNlaTrack(_objX, _dicMod, **kwargs):
@@ -128,6 +133,40 @@ def ApplyActionFromFile(_objX, sBlenderFilename, sActionname, fOffset=0, fOffset
 
 
 ############################################################################################
+@paramclass
+class CModifyActionParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/action:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    sBlenderFilename: str = (
+        CParamFields.REQUIRED(), 
+        CParamFields.HINT(sHint="filename of the blender file")
+        )
+    sActionname: str = (
+        CParamFields.REQUIRED(), 
+        CParamFields.HINT(sHint="name of the file in the blender file")
+        )
+    fOffset: float = (
+        CParamFields.HINT(sHint="offset in terms of keyframes"),
+        CParamFields.DEFAULT(0.0)
+        )
+    fOffsetPercentage: float = (
+        CParamFields.HINT(sHint="offset in terms of percentage"),
+        CParamFields.DEFAULT(0.0)
+        )
+    
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CModifyActionParams,
+)
+
 def ModifyAction(_objX, _dicMod, **kwargs):
     """
     Modify the action of an object.
@@ -146,21 +185,17 @@ def ModifyAction(_objX, _dicMod, **kwargs):
         dictionary containing the settings for the modifier
 
     """
+    mp = CModifyActionParams
+
     if "sBlenderFilename" not in _dicMod:
         raise Exception("sBlenderFilename not given for loading action for '{}'".format(_objX.name))
     # endif
-    sBlenderFilename = _dicMod["sBlenderFilename"]
 
     if "sActionname" not in _dicMod:
         raise Exception("sActionname not given for loading action for '{}'".format(_objX.name))
     # endif
 
-    sActionname = _dicMod["sActionname"]
-
-    fOffset = convert.DictElementToFloat(_dicMod, "fOffset", fDefault=0.0)
-    fOffsetPercentage = convert.DictElementToFloat(_dicMod, "fOffsetPercentage", bDoRaise=False)
-
-    ApplyActionFromFile(_objX, sBlenderFilename, sActionname, fOffset, fOffsetPercentage)
+    ApplyActionFromFile(_objX, mp.sBlenderFilename, mp.sActionname, mp.fOffset, mp.fOffsetPercentage)
 
 
 # enddef
