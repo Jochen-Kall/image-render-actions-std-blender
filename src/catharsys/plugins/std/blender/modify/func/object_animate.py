@@ -39,14 +39,33 @@ from catharsys.util.cls_entrypoint_information import CEntrypointInformation
 
 
 ############################################################################################
+@paramclass
+class CSelectNlaTrackParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/select-nla-track:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    xValue: str = (CParamFields.REQUIRED(), 
+                   CParamFields.HINT(sHint="NLA track"))
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CSelectNlaTrackParams,
+)
+
 def SelectNlaTrack(_objX, _dicMod, **kwargs):
+    mp = CSelectNlaTrackParams(_dicMod)
 
     if _objX.type != "ARMATURE":
         raise Exception(
             "Action 'select_nla_track' is not available for object '{0}'" " as it is not an armature".format(_objX.name)
         )
     # endif
-    sTrack = _dicMod.get("xValue")
+    sTrack = mp.xValue
     if sTrack not in _objX.animation_data.nla_tracks:
         raise Exception("NLA track '{0}' not found for object '{1}'".format(sTrack, _objX.name))
     # endif
