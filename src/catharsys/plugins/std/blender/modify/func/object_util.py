@@ -287,6 +287,27 @@ def ModifyProperties(_objX, _dicMod, **kwargs):
 
 
 ############################################################################################
+@paramclass
+class CModifyAttributesParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/attributes:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    mValues:dict = (CParamFields.REQUIRED(), 
+                   CParamFields.HINT(sHint="Attributes to be modified"),
+                   CParamFields.DEPRECATED("dValues")
+                   )
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CModifyAttributesParams,
+)
+
 def ModifyAttributes(_objX, _dicMod, **kwargs):
     """Modify attributes of a blender object
     For each parameter in _dicMod, create a command to modify the object attributes.
@@ -304,10 +325,14 @@ def ModifyAttributes(_objX, _dicMod, **kwargs):
         Raise an exception if anything fails during modification of the object
 
     """
+
+    mp = CModifyAttributesParams(_dicMod)
+
     assertion.IsTrue(g_bInBlenderContext)
 
     # "dValues" tag is deprecated
-    dicValues = _dicMod.get("mValues", _dicMod.get("dValues"))
+    # dicValues = _dicMod.get("mValues", _dicMod.get("dValues"))
+    dicValues = mp.mValues
     if not isinstance(dicValues, dict):
         raise RuntimeError("Missing element 'mValues' in modify attributes modifier")
     # endif
