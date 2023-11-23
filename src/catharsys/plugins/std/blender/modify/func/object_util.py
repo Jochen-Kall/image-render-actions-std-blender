@@ -211,6 +211,25 @@ def EnableIfBoundBox(_objX, _dicMod, **kwargs):
 
 
 ############################################################################################
+@paramclass
+class CModifyPropertiesParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/properties:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    mValues:dict = (CParamFields.REQUIRED(), 
+                   CParamFields.HINT(sHint="Attributes to be modified"))
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CModifyPropertiesParams,
+)
+
 def ModifyProperties(_objX, _dicMod, **kwargs):
     """Modify attributes of a blender object
     Modify custom properties of an object.
@@ -230,12 +249,13 @@ def ModifyProperties(_objX, _dicMod, **kwargs):
     """
     assertion.IsTrue(g_bInBlenderContext)
 
-    dicValues = _dicMod.get("mValues")
-    if not isinstance(dicValues, dict):
+    mp = CModifyPropertiesParams(_dicMod)
+ 
+    if not isinstance(mp.dicValues, dict):
         raise RuntimeError("Missing element 'mValues' in modify properties modifier")
     # endif
 
-    for sKey, xValue in dicValues.items():
+    for sKey, xValue in mp.dicValues.items():
         if not isinstance(sKey, str):
             raise RuntimeError("Invalid key type in modify attributes: {}".format(sKey))
         # endif
