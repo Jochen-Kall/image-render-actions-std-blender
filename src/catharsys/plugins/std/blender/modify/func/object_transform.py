@@ -568,27 +568,34 @@ class CApplyTransformsParams:
     bLocation: bool = (
         CParamFields.DEFAULT(True),
         CParamFields.DISPLAY("apply location"),
+        CParamFields.HINT(sHint="apply location"),
     )
 
     bRotation: bool = (
         CParamFields.DEFAULT(True),
         CParamFields.DISPLAY("apply rotation"),
+        CParamFields.HINT(sHint="apply rotation"),
     )
 
     bScale: bool = (
         CParamFields.DEFAULT(True),
-        CParamFields.DISPLAY("apply scale"),
+        CParamFields.DISPLAY("apply scale"),   
+        CParamFields.HINT(sHint="apply scale"),       
     )
 
     bProperties: bool = (
         CParamFields.DEFAULT(True),
         CParamFields.DISPLAY("apply properties"),
+        CParamFields.HINT(sHint="apply properties"),
     )
 
 
 # endclass
 
-
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CApplyTransformsParams,
+)
 def ApplyTransforms(_objX, _dicMod, **kwargs):
     """
     applies all transformations to the mesh
