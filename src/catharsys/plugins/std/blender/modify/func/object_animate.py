@@ -358,6 +358,65 @@ def ApplyActionFromFile2(
 
 
 ############################################################################################
+@paramclass
+class CModifyAction2Params:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/action:2.0"),
+        CParamFields.DEPRECATED("sType"),
+    )    
+    sBlenderFilename: str = (
+        CParamFields.REQUIRED(), 
+        CParamFields.HINT(sHint="filename of the blender file")
+        )
+    sActionname: str = (
+        CParamFields.REQUIRED(), 
+        CParamFields.HINT(sHint="name of the file in the blender file")
+        )
+    fActionFps: float = (
+        CParamFields.HINT(sHint="""The original fps the action was designed for. The modifier automatically
+            scales the action to fit the target capture and scene framerates.
+            Default, action is not scaled."""),
+        )
+    fActionScale: float = (
+        CParamFields.HINT(sHint="""Additional animation scale. Default, is unity."""),
+        CParamFields.DEFAULT(1.0)
+        )
+    bActionReverse: bool = (
+        CParamFields.HINT(sHint="""If set 'true' the action is reversed."""),
+        CParamFields.DEFAULT(True)
+    )
+    bActionToggleReverse: bool = (
+        CParamFields.HINT(sHint="""Everytime the action needs to be repeated, it's direction is reversed.
+            In this way, any action can be repeated smoothly."""),
+        CParamFields.DEFAULT(False)
+    )
+    fStartRelative:  float = (
+        CParamFields.HINT(sHint="""relative action start. Default zero.
+            Determines which frame of the action is placed at scene frame zero or the
+            the scene frame given as the first element of 'lTargetFrameRange'.
+            For example, value '0.5' places the central keyframe of the action
+            at scene frame zero, if 'lTargetFrameRange' is not specified."""),
+        CParamFields.DEFAULT(0.0)
+        )
+    lTargetFrameRange: list[int] = (
+        CParamFields.HINT(sHint="""ensures that there is an active NLA track within this target frame range.
+            If the action is too short, it is repeated so that at least this
+            frame range is covered. Default is that the action is run exactly once.
+            Note that, the target frames may differ from scene frames, depending
+            on the capture configuration and scene fps. This is accounted for
+            automatically in this modifier."""),
+    )
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CModifyAction2Params,
+)
+
 def ModifyAction2(_objX, _dicMod, **kwargs):
     """
     Modify the action of an object version 2.
@@ -414,20 +473,22 @@ def ModifyAction2(_objX, _dicMod, **kwargs):
 
     """
 
-    sBlenderFilename = _dicMod.get("sBlenderFilename")
+    mp=CModifyAction2Params(_dicMod)
+
+    sBlenderFilename = mp.sBlenderFilename
     if sBlenderFilename is None:
         raise RuntimeError("Element 'sBlenderFilename' not given for loading action for '{}'".format(_objX.name))
     # endif
 
-    sActionName = _dicMod.get("sActionName")
+    sActionName = mp.sActionname
     if sActionName is None:
         raise RuntimeError("Element 'sActionName' not given for loading action for '{}'".format(_objX.name))
     # endif
 
     dicVars = kwargs.get("dicVars")
 
-    fStartRelative = convert.DictElementToFloat(_dicMod, "fStartRelative", fDefault=0.0)
-    lTargetFrameRange = _dicMod.get("lTargetFrameRange")
+    fStartRelative = mp.fStartRelative   
+    lTargetFrameRange = mp.lTargetFrameRange
 
     if dicVars is None:
         raise RuntimeError("Needed runtime variables not given to apply action modifier")
@@ -439,21 +500,16 @@ def ModifyAction2(_objX, _dicMod, **kwargs):
         raise RuntimeError("Missing runtime variable in apply action modifier:\n{}".format(str(xEx)))
     # endif
 
-    fTargetFps = convert.DictElementToFloat(dicRender, "target-fps")
-    fSceneFps = convert.DictElementToFloat(dicRender, "scene-fps")
-
-    fActionFps = convert.DictElementToFloat(_dicMod, "fActionFps", fDefault=fSceneFps)
-    fActionScale = convert.DictElementToFloat(_dicMod, "fActionScale", fDefault=1.0)
-    bActionReverse = convert.DictElementToBool(_dicMod, "bActionReverse", bDefault=False)
+    fActionFps = convert.DictElementToFloat(_dicMod, "fActionFps", fDefault=mp.fSceneFps)
     bActionToggleReverse = convert.DictElementToBool(_dicMod, "bActionToggleReverse", bDefault=False)
 
     # Calculate scaling of action due to scene/action fps and user defined scale
-    fActScale = fActionScale * fSceneFps / fActionFps
+    fActScale = mp.fActionScale * mp.fSceneFps / fActionFps
 
     # Convert the frame range from target frames to scene frames
     lSceneFrameRange = None
     if lTargetFrameRange is not None:
-        lSceneFrameRange = [int(round(x * fSceneFps / fTargetFps, 0)) for x in lTargetFrameRange]
+        lSceneFrameRange = [int(round(x * mp.fSceneFps / mp.fTargetFps, 0)) for x in lTargetFrameRange]
     # endif
 
     ApplyActionFromFile2(
@@ -463,7 +519,7 @@ def ModifyAction2(_objX, _dicMod, **kwargs):
         fStartRelative=fStartRelative,
         lSceneFrameRange=lSceneFrameRange,
         fActionScale=fActScale,
-        bActionReverse=bActionReverse,
+        bActionReverse=mp.bActionReverse,
         bActionToggleReverse=bActionToggleReverse,
     )
 
