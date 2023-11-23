@@ -34,15 +34,37 @@ import random
 from anybase import convert
 from anyblend import object
 
+# Modifier decorator stuff
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
 
 ############################################################################################
+@paramclass
+class CRandomizeMeshParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/object/randomize-mesh:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    ) 
+    lMeshes:list = (
+        CParamFields.HINT(sHint="List of Meshes to draw from")
+        )
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CRandomizeMeshParams,
+)
 def RandomizeMesh(_objX, _dicMod, **kwargs):
-    sModType = _dicMod.get("sType", _dicMod.get("sDTI"))
-    lMeshes = _dicMod.get("lMeshes")
-    sMesh = random.choice(lMeshes)
+    mp=CRandomizeMeshParams(_dicMod)
+
+    sMesh = random.choice(mp.lMeshes)
 
     if sMesh not in bpy.data.meshes:
-        raise Exception("Mesh '{0}' not found in modifier '{1}'".format(sMesh, sModType))
+        raise Exception("Mesh '{0}' not found in modifier '{1}'".format(sMesh, mp.sDTI))
     _objX.data = bpy.data.meshes[sMesh]
 
 
