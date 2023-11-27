@@ -525,7 +525,36 @@ class CSnapObjToSurfParams:
 
 
 # -------------------------------------------------------------------------------------------
-@EntryPoint(CEntrypointInformation.EEntryType.MODIFIER)
+
+# @paramclass
+# class CEnableParams:
+#     sDTI: str = (
+#         CParamFields.HINT(sHint="entry point identification"),
+#         CParamFields.REQUIRED("/catharsys/blender/modify/object/snap-to-surf:1.0"),
+#         CParamFields.DEPRECATED("sType"),
+#     )    
+
+#     sTargetObject:str = (CParamFields.REQUIRED(), 
+#                         CParamFields.HINT(sHint="""The name of the target object. The collection objects will be placed on the surface
+#                             of this object."""))
+#     lOffset:list[float] = (
+#                             CParamFields.HINT(sHint="""Position offset for evaluated positions."""))
+#     lSnapDir:list[float] = (
+#                             CParamFields.HINT(sHint="""Position offset for evaluated positions."""),
+#                             CParamFields.DEFAULT([0.0,0.0,-1.0])
+#                             ) 
+#     sSnapMode:str = (
+#         CParamFields.HINT(sHint="Snap mode, has to be one of 'ABOVE', 'BELOW', 'CLOSEST'"),
+#         CParamFields.OPTIONS(['ABOVE', 'BELOW', 'CLOSEST'],xDefault=)
+#     )
+# # endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CSnapObjToSurfParams,
+)
 def SnapObjToSurf(_objX, _dicMod, **kwargs):
     """Snap object to surface.
 
