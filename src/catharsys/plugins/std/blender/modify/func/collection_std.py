@@ -120,6 +120,34 @@ def SetCollectionLabel(_clnX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CForEachObjectParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/collection/for-each-object:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )
+
+    lModifier: list[dict] = (
+         CParamFields.HINT("""list of modifier configurations that are applied per object."""), 
+         CParamFields.REQUIRED(),      
+    )
+
+    lObjectTypes: list[str] = (
+        CParamFields.HINT("""list of objects types that are to be taken into account.
+                                                 By default all object types are allowed."""),
+    )
+
+    sObjectNamePattern: str = (
+        CParamFields.HINT("""Only objects with names that match this regular expression
+                                                 are taken into account. By default this is not applied."""),
+
+    )
+
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CForEachObjectParams,
+)    
 @logFunctionCall
 def ForEachObject(_clnX, _dicMod, **kwargs):
     """Apply list of modifiers to each object in collection. The set of objects
@@ -142,15 +170,14 @@ def ForEachObject(_clnX, _dicMod, **kwargs):
     """
     sMode = kwargs.get("sMode", "INIT")
     dicVars = kwargs.get("dicVars", {})
-    lObjectTypes = _dicMod.get("lObjectTypes")
-    sObjNamePattern = _dicMod.get("sObjectNamePattern")
+    
+    mp = CForEachObjectParams(_dicMod)
 
-    lModifiers = _dicMod.get("lModifiers")
-    if lModifiers is None:
+    if mp.lModifiers is None:
         raise RuntimeError("Element 'lModifiers' missing for collection modifier '{}'".format(_dicMod.get("sType")))
     # endif
 
-    for dicModFunc in lModifiers:
+    for dicModFunc in mp.lModifiers:
         if isinstance(dicModFunc, str):
             continue
         elif isinstance(dicModFunc, dict):
@@ -161,8 +188,8 @@ def ForEachObject(_clnX, _dicMod, **kwargs):
     # endfor
 
     reObj = None
-    if sObjNamePattern is not None:
-        reObj = re.compile(sObjNamePattern)
+    if mp.sObjNamePattern is not None:
+        reObj = re.compile(mp.sObjNamePattern)
     # endif
 
     iIdx = 0
@@ -172,7 +199,7 @@ def ForEachObject(_clnX, _dicMod, **kwargs):
     # way during the following loop
     # lObjectsToProcess = [objX for objX in _clnX.objects if lObjectTypes is not None and objX.type in lObjectTypes]
     lObjectsToProcess = collection.GetCollectionObjects(
-        _clnX, _bChildren=False, _bRecursive=True, _lObjectTypes=lObjectTypes
+        _clnX, _bChildren=False, _bRecursive=True, _lObjectTypes=mp.lObjectTypes
     )
 
     for sObjName in lObjectsToProcess:
