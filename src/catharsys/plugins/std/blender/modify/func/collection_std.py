@@ -70,23 +70,49 @@ from catharsys.decs.decorator_log import logFunctionCall
 
 from .. import objects
 
+# Modifier decorator stuff
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
 
 ################################################################################
+@paramclass
+class CSetCollectionLabelParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/collection/anytruth/labeltype:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )
+    # sMode: str = CParamFields.OPTIONS(["INIT", "FRAME_UPDATE"], xDefault="INIT")
+    sLabelTypeId: str = ( CParamFields.HINT("No Idea, fix me pls"),
+                         CParamFields.REQUIRED())
+    bHasLabel: bool = ( CParamFields.HINT("No Idea, fix me pls"),
+                         CParamFields.DEFAULT(True))
+    bIgnore: bool = ( CParamFields.HINT("Do not execute this modifier if set to true"),
+                      CParamFields.DEFAULT(False))   
+    sChildrenInstanceType: str = ( CParamFields.HINT("No Idea, fix me pls"),
+                         CParamFields.REQUIRED())    
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CSetCollectionLabelParams,
+)
 def SetCollectionLabel(_clnX, _dicMod, **kwargs):
     assertion.IsTrue(g_bInBlenderContext)
 
-    sLabelTypeId = _dicMod.get("sLabelTypeId")
-    bHasLabel = _dicMod.get("bHasLabel", True)
-    bIgnore = _dicMod.get("bIgnore", False)
-    sChildrenInstanceType = _dicMod.get("sChildrenInstanceType")
+    mp = CSetCollectionLabelParams(_dicMod)
 
     ops_labeldb.SetCollectionLabel(
         bpy.context,
         sCollectionName=_clnX.name,
-        sLabelTypeId=sLabelTypeId,
-        bHasLabel=bHasLabel,
-        bIgnore=bIgnore,
-        sChildrenInstanceType=sChildrenInstanceType,
+        sLabelTypeId=mp.sLabelTypeId,
+        bHasLabel=mp.bHasLabel,
+        bIgnore=mp.bIgnore,
+        sChildrenInstanceType=mp.sChildrenInstanceType,
     )
 
 
