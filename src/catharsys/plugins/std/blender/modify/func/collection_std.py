@@ -725,6 +725,35 @@ def RndPlaceObjOnSurf(_clnX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CMoveObjectToCollectionParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/collection/move-object-to:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )
+
+    sObj: str = (
+        CParamFields.HINT(" Name of an object to be moved"),
+    )
+
+    lObj: list[str] = (
+        CParamFields.HINT("List of object names to be moved"),
+        CParamFields.DEFAULT([]),
+
+    )
+
+    bSkipNonexistingObject: bool = (
+        CParamFields.HINT("""Control how to handle missing objects,
+        false: throw an error
+        true: skip object"""),
+        CParamFields.DEFAULT(False),        
+    )
+
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CMoveObjectToCollectionParams,
+)
 def MoveObjectToCollection(_clnX, _dicMod, **kwargs):
     """Moves object/list of objects to collection
     Parameters:
@@ -736,14 +765,15 @@ def MoveObjectToCollection(_clnX, _dicMod, **kwargs):
     """
 
     assertion.IsTrue(g_bInBlenderContext)
-
-    bSkipNonexistingObject = convert.DictElementToBool(_dicMod, "bSkipNonexistingObject", bDefault=False)
+    mp = CMoveObjectToCollectionParams(_dicMod)
 
     # handling list parameter of objects, if nothing passed start with empty list
-    lObj = convert.DictElementToStringList(_dicMod, "lObj", lDefault=[])
+    lObj = mp.lObj
+    # lObj = convert.DictElementToStringList(_dicMod, "lObj", lDefault=[])
 
     # get single string parameter object, add to list if present
-    sObj = convert.DictElementToString(_dicMod, "sObj", sDefault=None, bDoRaise=False)
+    # sObj = convert.DictElementToString(_dicMod, "sObj", sDefault=None, bDoRaise=False)
+    sObj = mp.sObj
 
     if sObj is not None:
         lObj.append(sObj)
@@ -755,7 +785,7 @@ def MoveObjectToCollection(_clnX, _dicMod, **kwargs):
 
     for xObj, sObjName in zip(xObjects, lObj):
         if xObj is None:
-            if not bSkipNonexistingObject:
+            if not mp.bSkipNonexistingObject:
                 raise RuntimeError(f"Object '{sObjName}' to be moved to collection does not exist!")
             else:
                 print(f"WARNING: Object '{sObjName}' to be moved to collection does not exist! Skipping modifier")
