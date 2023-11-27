@@ -227,6 +227,186 @@ def ForEachObject(_clnX, _dicMod, **kwargs):
 
 
 ################################################################################
+@paramclass
+class CRndPlaceObjOnSurfParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/collection/object-placement/rnd-surf:1.0"),
+        CParamFields.DEPRECATED("sType"),
+    )
+
+    sTargetObject: str = (
+        CParamFields.HINT("""The name of the target object. The collection objects will be placed on the surface
+            of this object.""")
+    )
+
+    lTargetObjects: list[str] = (
+        CParamFields.HINT("""A list of target objects where to place source objects. Takes precedence over sTargetObject,
+            if both are specified.""")
+    )
+
+    sVertexGroup:str = (
+        CParamFields.HINT("""The name of the vertex group used for weighting the placement.
+            If lTargetObjects is specified and no lVertexGroups, but sVertexGroup,
+            the sVertexGroup name is used for all target objects.""")        
+    )
+
+    lVertexGroups: list[str] = (
+        CParamFields.HINT("""A list of vertex groups, one per target object, that contain the respective
+            vertex weighting.""")        
+    )
+
+    fMinimalDistance: float = (
+        CParamFields.HINT("""Minimal distance between objects."""),
+        CParamFields.DEFAULT(0.0)           
+    )
+
+    fMaximalDistance: float = (
+        CParamFields.HINT("""Maximal distance between objects. Defaults to no max. distance."""),          
+    )
+
+    lObjectTypes: list[str] = (
+        CParamFields.HINT("""List of object type strings to place."""),          
+    )
+
+    iObjectInstanceCount: int = (
+        CParamFields.HINT("""Number of object instances to create. If set to zero (default), then each
+            object is used once."""),
+        CParamFields.DEFAULT(0)          
+    )
+
+    sInstanceCollectionName: str = (
+        CParamFields.HINT("""Name of the newly created collection, if 'iObjectInstanceCount' is given."""),
+        CParamFields.DEFAULT(None)          
+    )
+
+    bCopyInstanceParentCollection: bool = (
+        CParamFields.HINT("""When instancing object, copy their respective parent collection including the collection's labelling,
+            and place the instanced object in the copied collection, which is parented to the target collection.
+            Only used if 'iObjectInstanceCount' is given."""),
+        CParamFields.DEFAULT(False)          
+    )
+
+    lOffset: list[float] = (
+        CParamFields.HINT("""Position offset for evaluated positions."""),     
+    )
+
+    iSeed: int = (
+        CParamFields.HINT("""Random seed for placement of objects."""),    
+        CParamFields.DEFAULT(0) 
+    )
+
+    fMinHorizViewAngleSep_deg: float = (
+        CParamFields.HINT("""The minimal horizontal view angle separation in degrees of the generated points."""),    
+        CParamFields.DEFAULT(0.0) 
+    )
+
+    bFilterPolygons: bool = (
+        CParamFields.HINT("""If true, weights all polygon vertices by the camera FoV and camera distance constraints.
+            In this way, polygons that are outside the camera FoV or distance constraints will not
+            be used for finding randomized points. This speeds up the search for points dramatically.
+            Only works if the target surface has more than 4 polygons."""),    
+        CParamFields.DEFAULT(False) 
+    )
+
+    bUseCameraFov: bool = (
+        CParamFields.HINT("""Constrains points to the camera field-of-view, if set to true.
+            If the camera has been created with AnyCam, the FoV is obtained from the
+            AnyCam meta information for non-standard cameras."""),    
+        CParamFields.DEFAULT(False) 
+    )
+
+    lCamDistRange: list[float] = (
+        CParamFields.HINT("""Minimal and maximal distance from camera that are allowed.  default=[0, inf]"""),    
+        # CParamFields.DEFAULT([0.0, math.inf]) 
+    )
+
+    lCamFovBorderAngle_deg: list[float] = (
+        CParamFields.HINT("""Reduces the camera field of view used, by the given amounts for horizontal
+            and vertical FoV. Only used when 'bUseCameraFov' is true."""),    
+        CParamFields.DEFAULT([0.0, 0.0]) 
+    )
+
+    bUseBoundBox: bool = (
+        CParamFields.HINT("""If set to true, uses the bounding boxes of the objects passed in "lObjects"
+            to determine their minimal distance. Defaults to false."""),    
+        CParamFields.DEFAULT(False) 
+    )
+
+    xInstanceOrigin: list[float or str] = (
+        CParamFields.HINT("""If it is a list it gives the origin of the instances' bounding box relative to their centers.
+                For example, [0,0,-0.5] is the center of the bottom plane,
+                and [0,0,0] is the center of the bounding box.
+            If it is a string it can be one of the following:
+                - "ORIG": uses the instance's origin for placement and not the bounding box"""),    
+        CParamFields.DEFAULT([0.0,0.0,-0.5])    
+    )
+
+    sInstanceType: str = (
+        CParamFields.HINT("""Determines how the collection "_clnX" is instantiated.
+            Has to be one of the following values: [OBJECT|CHILD_OBJ|CHILD_CLN]
+            - OBJECT: The whole collection is regarded as one object.
+            - CHILD_OBJ: All objects in the collection and all objects in its' child collections are separate objects.
+            - CHILD_CLN: All objects in the collection and all child collections are separate objects.
+                         That is, the child collections are regarded as single objects."""),    
+        CParamFields.OPTIONS(["OBJECT", "CHILD_OBJ", "CHILD_CLN"], xDefault="CHILD_OBJ")    
+    )
+
+    bCopyInstanceParentCollection: bool = (
+        CParamFields.HINT("""When instancing object, copy their respective parent collection including the collection's labelling,
+            and place the instanced object in the copied collection, which is parented to the target collection."""),    
+        CParamFields.DEFAULT(False) 
+    )
+
+    lObstacles: list[dict] = (
+        CParamFields.HINT("""Only used when bUseBoundBox is true. List of objects or collections of objects whose bounding boxes
+            will not be intersected by the object's bounding boxes. Each element in the list
+            must have one of the following element types:
+            { "sCln": "[Collection name]", "sInstType": "[OBJECT|CHILD_OBJ|CHILD_CLN]" }
+            { "sObj": "[Object name]"}
+            'sInstType' values have the following meanings if 'sName' refers to a collection:
+            - OBJECT: The whole collection is regarded as one object.
+            - CHILD_OBJ: All objects in the collection and all objects in its' child collections are separate objects.
+            - CHILD_CLN: All objects in the collection and all child collections are separate objects.
+                         That is, the child collections are regarded as single objects.
+    """),    
+        )
+    iMaxTrials:int = (
+        CParamFields.HINT("""Number of times a random point is generated and tested as a valid position.
+            If, after this number of trials no valid point is found, the respective
+            object is not moved."""),
+        CParamFields.DEFAULT(20)
+    )
+
+    lInstRndRotEulerRange_deg:list[list[float]] = (
+        CParamFields.HINT("""Random instance rotation Euler Angle ranges. List of three
+            lists of two values, giving the rotation range per Euler angle
+            in degrees."""),
+        CParamFields.DEFAULT(None)
+    )
+
+    lInstRndRotOriginOffset:list[float] = (
+        CParamFields.HINT("""Rotation origin offset relative to bounding box center of instances,
+            along bounding box axes. The bounding box center is [0,0,0], the center
+            of the bottom (-Z) bounding box plane is [0,0,-0.5]."""),
+        CParamFields.DEFAULT([0.0,0.0,-0.5])
+    )
+
+    bInstDrawBoundingBoxes: bool = (
+        CParamFields.HINT("""Generates bounding box as hidden object for each instance if true."""),    
+        CParamFields.DEFAULT(False) 
+    )
+
+    bObstDrawBoundingBoxes: bool = (
+        CParamFields.HINT("""Generates bounding box as hidden object for each obstacle if true."""),    
+        CParamFields.DEFAULT(False) 
+    )
+   
+
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CRndPlaceObjOnSurfParams,
+)
 @logFunctionCall
 def RndPlaceObjOnSurf(_clnX, _dicMod, **kwargs):
     """Place all objects and/or child collections in a given collection randomly onto surface.
