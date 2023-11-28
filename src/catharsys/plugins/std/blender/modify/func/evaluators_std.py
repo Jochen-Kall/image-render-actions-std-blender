@@ -37,6 +37,11 @@ from anybase.cls_any_error import CAnyError_Message
 import anybase.util
 from anybase import convert
 
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
+
 ################################################################################################
 def ObjectInfo(_dicEval, **kwargs):
 
@@ -76,8 +81,35 @@ def ObjectInfo(_dicEval, **kwargs):
 
 
 ################################################################################################
-def LookAtRotZ(_dicEval, **kwargs):
+@paramclass
+class CLookAtRotZParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/evaluate/look-at/rot-z:1.0"),
+    )
+    lOrigin:list = (
+        CParamFields.HINT("Origin as 3 Element vector"),
+        CParamFields.DEFAULT([0.0,0.0,0.0])
+    )
+    lTarget:list = (
+        CParamFields.HINT("Target as 3 Element vector"),
+        CParamFields.REQUIRED(),
+    )
+    sUnit:str = (
+        CParamFields.OPTIONS(["rad","deg"],xDefault="rad"),
+        CParamFields.HINT("Specify unit in radians or degrees")
+    )
 
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CLookAtRotZParams,
+)
+
+def LookAtRotZ(_dicEval, **kwargs):
     # print("=================================================")
     # print(_dicEval)
 
