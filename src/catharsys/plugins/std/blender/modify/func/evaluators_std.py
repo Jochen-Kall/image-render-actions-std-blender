@@ -177,6 +177,29 @@ def LookAtRotZ(_dicEval, **kwargs):
 
 
 ################################################################################################
+@paramclass
+class CRunPyScriptParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/evaluate/py/script:1.0"),
+    )
+    sScriptFilename:str = (
+        CParamFields.HINT("Python file to be executed"),
+        CParamFields.REQUIRED()
+    )
+    __locals__: dict = (
+    )
+    mGlobals: dict = (
+    )
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CRunPyScriptParams,
+)
+
 def RunPyScript(_dicEval, **kwargs):
 
     sMode: str = kwargs.get("sMode", "INIT")
