@@ -318,7 +318,7 @@ class CRndPlaceObjOnSurfParams:
 
     lCamDistRange: list[float] = (
         CParamFields.HINT("""Minimal and maximal distance from camera that are allowed.  default=[0, inf]"""),    
-        # CParamFields.DEFAULT([0.0, math.inf]) 
+        CParamFields.DEFAULT([0.0, math.inf]) 
     )
 
     lCamFovBorderAngle_deg: list[float] = (
