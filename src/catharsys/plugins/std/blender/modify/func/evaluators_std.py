@@ -43,6 +43,26 @@ from catharsys.decs.decorator_ep import EntryPoint
 from catharsys.util.cls_entrypoint_information import CEntrypointInformation
 
 ################################################################################################
+@paramclass
+class CObjectInfoParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/evaluate/object/info:1.0"),
+    )
+    sObjectId:str = (
+        CParamFields.HINT("Object Identifier"),
+        CParamFields.REQUIRED()
+    )
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CObjectInfoParams,
+)
+
 def ObjectInfo(_dicEval, **kwargs):
 
     sObjectId = _dicEval.get("sObjectId")
