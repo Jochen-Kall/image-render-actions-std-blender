@@ -31,8 +31,27 @@ from anybase.cls_any_error import CAnyError_Message
 import ison
 from . import util
 
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
 
 ############################################################################################
+@paramclass
+class CEvaluateParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/evaluate:1.0"),
+    )
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CEvaluateParams,
+)
+
 def Evaluate(_dicData, sMode="INIT", dicVars={}):
     dicResult = {}
 
