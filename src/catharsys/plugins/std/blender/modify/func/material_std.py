@@ -34,6 +34,12 @@ from anybase import path
 from anyblend import util
 from . import ngrp_nodes
 
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+
+
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
+
 ##################################################################################
 def _DoSetTexture(_xNode, _sImgId, _sRemoveImgId):
 
@@ -197,6 +203,26 @@ def SwapMaterial(_matX, _dicMod, **kwargs):
 
 
 ##################################################################################
+
+@paramclass
+class CSetNodeValuesParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/material/node-values:1.0"),
+    )
+    sMode: str = CParamFields.OPTIONS(["INIT", "FRAME_UPDATE"], xDefault="INIT")
+
+
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CSetNodeValuesParams,
+)
+
 def SetNodeValues(_matX, _dicMod, **kwargs):
 
     sMode = kwargs.get("sMode", "INIT")
