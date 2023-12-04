@@ -153,6 +153,24 @@ def SetTexturesFromFolder(_matX, _dicMod, **kwargs):
 
 
 ##################################################################################
+
+@paramclass
+class CSwapMaterialParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/material/swap:1.0"),
+    )
+    # sMode: str = CParamFields.OPTIONS(["INIT", "FRAME_UPDATE"], xDefault="INIT")
+    sMaterial: str = (CParamFields.REQUIRED(),
+                      CParamFields.HINT("Material to replace"))    
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CSwapMaterialParams,
+)
 def SwapMaterial(_matX, _dicMod, **kwargs):
 
     sMode = kwargs.get("sMode", "INIT")
