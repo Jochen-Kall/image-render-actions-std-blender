@@ -35,6 +35,12 @@ from . import util
 
 from catharsys.decs.decorator_log import logFunctionCall
 
+from anybase.dec.cls_paramclass import paramclass, CParamFields
+
+
+from catharsys.decs.decorator_ep import EntryPoint
+from catharsys.util.cls_entrypoint_information import CEntrypointInformation
+
 
 # concentrate print functionality for further generic logging concept
 def _Print(_sMsg: str):
@@ -89,6 +95,34 @@ def ModifyCollection(_clnX, _lMods, sMode="INIT", dicVars=None):
 
 
 ############################################################################################
+# Christian Fragen was es damit auf sich hat!!!
+# Ist nicht in seinen Beispielen dokumentiert, sieht nicht wie ein ueblicher Modifier aus, so ganz ohne _dicMod
+@paramclass
+class CModifyCollectionsParams:
+    sDTI: str = (
+        CParamFields.HINT(sHint="entry point identification"),
+        CParamFields.REQUIRED("/catharsys/blender/modify/collection:1.0"),
+    )
+
+
+
+    # sMode: str = CParamFields.OPTIONS(["INIT", "FRAME_UPDATE"], xDefault="INIT")
+    sOriginType: str = CParamFields.OPTIONS(
+        ["GEOMETRY_ORIGIN", "ORIGIN_GEOMETRY", "ORIGIN_CURSOR", "ORIGIN_CENTER_OF_MASS", "ORIGIN_CENTER_OF_VOLUME"],
+        xDefault="GEOMETRY_ORIGIN",
+    )
+    sCenter: str = CParamFields.OPTIONS(["MEDIAN", "BOUNDS"], xDefault="MEDIAN")
+
+
+# endclass
+
+
+# -------------------------------------------------------------------------------------------
+@EntryPoint(
+    CEntrypointInformation.EEntryType.MODIFIER,
+    clsInterfaceDoc=CModifyCollectionsParams,
+)
+
 @logFunctionCall
 def ModifyCollections(_dicCfg, sMode="INIT", dicVars=None):
 
